@@ -97,6 +97,7 @@ void General_operation_helper(const T* a, const T* b, T* dest, int n, Operations
 
     General_operation<T><<<blocks, threadsPerBlock>>>(cudaA, cudaB, cudaDest, n, op);
     cudaDeviceSynchronize();
+    std::cout << "Dot GPU" << std::endl;
     cudaMemcpy(dest, cudaDest, n * sizeof(T), cudaMemcpyDeviceToHost);
     free_data(cudaA, cudaB, cudaDest);
 }
@@ -145,39 +146,6 @@ void dot_product(const T* a, const T* b, T* dest, int m, int k, int n)
 
 }
 
-template <typename T>
-__global__ void sumting(T* a, int size, int iteration)
-{
-    int idx = threadIdx.x + blockDim.x * blockIdx.x;
-    if(idx > size || idx % (int)(pow(2,iteration+1)))
-        return;
-    a[idx] = a[idx] + (idx + pow(2, iteration) < size) * a[idx + (int)pow(2, iteration)];
-}
-
-template <typename T>
-void sum_cuda(const T* a, T* dest, int size)
-{
-    T* cudaA;
-    cudaMalloc(&cudaA, size * sizeof(T));
-    cudaMemcpy(cudaA, a, size * sizeof(T), cudaMemcpyHostToDevice);
-
-    int iterations = (int)(log2(size)) + 1;
-    if(log2(size) == iterations-1)
-        iterations--;
-    int threads = 256;
-    int blocks = (size + threads - 1) / threads;
-    for(int i = 0; i < iterations; i++)
-    {
-        sumting<T><<<blocks, threads>>>(cudaA, size, i);
-        cudaDeviceSynchronize();
-    }
-    // sum_helper<<<1, 1>>>(cudaA, cudaDest, size, iterations);
-
-    cudaMemcpy(dest, cudaA, sizeof(T), cudaMemcpyDeviceToHost);
-    cudaFree(cudaA);
-
-}
-
 template void General_operation_helper(const int* , const int*, int*, int, Operations);
 template void General_operation_helper(const float* , const float*, float*, int, Operations);
 
@@ -186,6 +154,3 @@ template void General_scalar_helper(const float* a, float scalar, float* dest, i
 
 template void dot_product(const int* , const int* , int*, int, int, int);
 template void dot_product(const float* , const float* , float*, int, int, int);
-
-template void sum_cuda(const int*, int*, int);
-template void sum_cuda(const float*, float*, int);

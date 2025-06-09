@@ -12,6 +12,7 @@ private:
     int row, col;
 public:
     std::vector<T> matrix;
+    std::vector<int> shape();
     void resize(int row, int col);
     void toString();
     int numRows();
@@ -67,5 +68,8 @@ void general_Scalar_operation(matrice<T>& a, T b, matrice<T>& dest, Operations o
 template <typename T>
 void general_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops);
 
-#include "../src/matrice.cpp"
+template <typename T>
+void general_vector_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops, int axis);
+
+#include "../src/matrice_gpu.cpp"
 #endif

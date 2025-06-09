@@ -4,6 +4,8 @@
 #define vec2D(X) std::vector<std::vector<X>>
 #include <vector>
 #include "Layer.h"
+#include <math.h>
+
 
 class Network
 {

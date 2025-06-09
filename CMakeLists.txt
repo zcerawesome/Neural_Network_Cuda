@@ -10,7 +10,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 SET(SOURCES
-    src/matrice.cpp
+    src/matrice_gpu.cpp
     src/Network.cpp
 )
 

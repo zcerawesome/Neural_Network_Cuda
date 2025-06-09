@@ -33,9 +33,33 @@ matrice<float> Network::one_hot_encode(matrice<float>& y)
     return one_hot;
 }
 
+bool has_nan(matrice<float>& inp)
+{
+    for(auto& value: inp.matrix)
+        if(isnan(value))
+            return true;
+    return false;
+}
+
+bool has_nan(vec(matrice<float>)& inp)
+{
+    for(auto& matrix: inp)
+        for(auto& value: matrix.matrix)
+            if(isnan(value))
+                return true;
+    return false;
+}
+
+bool val_greater_than(matrice<float>& inp, float value)
+{
+    
+    return false;
+}
+
 vec(matrice<float>) Network::forward(matrice<float>& X)
 {
     vec(matrice<float>) output((layers.size() - 1) * 2);
+    int j = -1;
     for(int i = 0; i < layers.size()-1; i++)
     {
         Layer& layer = layers[i + 1];
@@ -46,7 +70,15 @@ vec(matrice<float>) Network::forward(matrice<float>& X)
         else
             Z = layer.weight.Dot(output[i * 2 - 1]) + layer.bias;
         A = layer.activation_function(Z);
+        // std::cout << "Iteration: " << ++j << std::endl;
+        // std::cout << "Z: " << has_nan(Z) << std::endl;
+        // std::cout << "A: " << has_nan(A) << std::endl;
+        // std::cout << "Dot CPU" << std::endl;
     }
+    
+    for(auto& matrix: output)
+        std::cout <<  matrix.max() << std::endl;
+    exit(0);
     return output;
 }
 
@@ -57,6 +89,7 @@ vec(matrice<float>) Network::backward_prop(vec(matrice<float>)& forward, matrice
 
     vec(matrice<float>) results((layers.size() - 1) * 2);
     vec(matrice<float>) not_results(layers.size()-1);
+    int iteration = 0;
     for(int i = layers.size() - 2; i >= 0; i--)
     {
         if(i == layers.size()-2)

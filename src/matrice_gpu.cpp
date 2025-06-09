@@ -1,4 +1,10 @@
-#include "matrice.h"
+#include "matrice_gpu.h"
+
+template <typename T>
+std::vector<int> matrice<T>::shape()
+{
+    return {row, col};
+}
 
 template <typename T>
 void matrice<T>::resize(int row, int col)
@@ -159,11 +165,8 @@ template <typename T>
 T matrice<T>::sum()
 {
     T value = 0;
-    if(matrix.size() > 1000)
-        sum_cuda<T>(getData(), &value, row * col);
-    else
-        for(int i = 0; i < row * col; i++)
-            value += matrix[i];
+    for(int i = 0; i < row * col; i++)
+        value += matrix[i];
     return value;
 }
 
@@ -199,6 +202,10 @@ template <typename T>
 matrice<T> matrice<T>::operator-(matrice<T>& inp)
 {
     matrice<T> temp(inp.row, inp.col);
+    if(inp.row != row)
+        general_vector_operation(*this, inp, temp, Subtract, 0);
+    else if(inp.col != col)
+        general_vector_operation(*this, inp, temp, Subtract, 1);
     if(matrix.size() > 1000)
         General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), inp.row * inp.col, Subtract);
     else
@@ -211,6 +218,10 @@ matrice<T> matrice<T>::operator-(const matrice<T>& inp)
 {
     matrice<T> temp(inp.row, inp.col);
     matrice<T> inp2 = inp;
+    if(inp.row != row)
+        general_vector_operation(*this, inp2, temp, Subtract, 0);
+    else if(inp.col != col)
+        general_vector_operation(*this, inp2, temp, Subtract, 1);
     if(matrix.size() > 1000)
         General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), inp.row * inp.col, Subtract);
     else
@@ -232,7 +243,11 @@ matrice<T> matrice<T>::operator-(T inp)
 template <typename T>
 matrice<T> matrice<T>::operator+(matrice<T>& inp)
 {
-    matrice<T> temp(inp.row, inp.col);
+    matrice<T> temp(row, col);
+    if(inp.row != row)
+        general_vector_operation(*this, inp, temp, Add, 0);
+    else if(inp.col != col)
+        general_vector_operation(*this, inp, temp, Add, 1);
     if(matrix.size() > 1000)
         General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), inp.row * inp.col, Add);
     else
@@ -243,8 +258,12 @@ matrice<T> matrice<T>::operator+(matrice<T>& inp)
 template <typename T>
 matrice<T> matrice<T>::operator+(const matrice<T>& inp)
 {
-    matrice<T> temp(inp.row, inp.col);
+    matrice<T> temp(row, col);
     matrice<T> inp2 = inp;
+    if(inp.row != row)
+        general_vector_operation(*this, inp2, temp, Add, 0);
+    else if(inp.col != col)
+        general_vector_operation(*this, inp2, temp, Add, 1);
     if(matrix.size() > 1000)
         General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), inp.row * inp.col, Add);
     else
@@ -334,7 +353,9 @@ matrice<T> matrice<T>::Dot(const matrice<T>& inp)
 {
     if(col != inp.row)
     {
-        std::cerr << "Error wrong dimensions for dot product" << std::endl;
+        std::cerr << "Error wrong dimensions for dot product " << row << " " << col << std::endl;
+        std::cerr << inp.row << " " << inp.col << std::endl;
+        exit(0);
         return {};
     }
     matrice<T> temp(row, inp.col);
@@ -351,15 +372,16 @@ matrice<T> matrice<T>::Dot(matrice<T>& inp)
 {
     if(col != inp.row)
     {
-        std::cerr << "Error wrong dimensions for dot product" << std::endl;
+        std::cerr << "Error wrong dimensions for dot product " << row << " " << col << std::endl;
+        std::cerr << inp.row << " " << inp.col << std::endl;
+        exit(0);
         return {};
     }
     matrice<T> temp(row, inp.col);
-    matrice<T> inp2 = inp;
     if(matrix.size() > 1000)
         dot_product(getData(), inp.getData(), temp.getData(), row, inp.row, inp.col);
     else
-        dot(*this, inp2, temp);
+        dot(*this, inp, temp);
     return temp;
 }
 
@@ -410,6 +432,34 @@ void general_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operation
                     break;
                 case Division:
                     dest[index] = a[index] / b[index];
+            }
+        }
+    }
+}
+
+
+template <typename T>
+void general_vector_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops, int axis)
+{
+    for(int i = 0; i < a.numRows(); i++)
+    {
+        for(int j = 0; j < a.numCols(); j++)
+        {
+            int index = i * dest.numCols() + j;
+            int b_index = (axis) ? index - j: j;
+            switch(ops)
+            {
+                case Add:
+                    dest[index] = a[index] + b[b_index];
+                    break;
+                case Subtract:
+                    dest[index] = a[index] - b[b_index];
+                    break;
+                case Multiply:
+                    dest[index] = a[index] * b[b_index];
+                    break;
+                case Division:
+                    dest[index] = a[index] / b[b_index];
             }
         }
     }
