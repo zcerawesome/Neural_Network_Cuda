@@ -1,12 +1,12 @@
-#ifndef MATRICE_H
-#define MATRICE_H
+#ifndef MATRICE_GPU_H
+#define MATRICE_GPU_H
 #include <vector>
 #include <iostream>
 #include "matrice_helper.cuh"
 
 
 template <typename T>
-class matrice
+class matrice_gpu
 {
 private:
     int row, col;
@@ -18,20 +18,20 @@ public:
     int numRows();
     T& get(int x, int y);
     int numCols();
-    matrice();
-    matrice(int row, int col);
-    matrice(std::vector<T>& inp);
-    matrice(const std::vector<T>& inp);
-    matrice(std::vector<std::vector<T>>& inp);
-    matrice(const std::vector<std::vector<T>>& inp);
-    matrice<T> transpose();
-    matrice<T> operator=(std::vector<std::vector<T>>& inp);
-    matrice<T> operator=(const std::vector<std::vector<T>>& inp);
-    matrice<T> operator=(std::vector<T>& inp);
-    matrice<T> operator=(const std::vector<T>& inp);
+    matrice_gpu();
+    matrice_gpu(int row, int col);
+    matrice_gpu(std::vector<T>& inp);
+    matrice_gpu(const std::vector<T>& inp);
+    matrice_gpu(std::vector<std::vector<T>>& inp);
+    matrice_gpu(const std::vector<std::vector<T>>& inp);
+    matrice_gpu<T> transpose();
+    matrice_gpu<T> operator=(std::vector<std::vector<T>>& inp);
+    matrice_gpu<T> operator=(const std::vector<std::vector<T>>& inp);
+    matrice_gpu<T> operator=(std::vector<T>& inp);
+    matrice_gpu<T> operator=(const std::vector<T>& inp);
 
-    void operator=(matrice<T>& inp);
-    void operator=(const matrice<T>& inp);
+    void operator=(matrice_gpu<T>& inp);
+    void operator=(const matrice_gpu<T>& inp);
     void update(int row, int col);
 
     T& operator[](int row);
@@ -39,37 +39,35 @@ public:
     T sum();
     T max();
 
-    matrice<T> getRows(int start, int end);
-    matrice<T> getCols(int start, int end);
+    matrice_gpu<T> getRows(int start, int end);
+    matrice_gpu<T> getCols(int start, int end);
 
-    matrice<T> operator-(matrice<T>& inp);
-    matrice<T> operator-(const matrice<T>& inp);
-    matrice<T> operator-(T inp);
+    matrice_gpu<T> operator-(matrice_gpu<T>& inp);
+    matrice_gpu<T> operator-(const matrice_gpu<T>& inp);
+    matrice_gpu<T> operator-(T inp);
 
-    matrice<T> operator+(matrice<T>& inp);
-    matrice<T> operator+(const matrice<T>& inp);
-    matrice<T> operator+(T inp);
+    matrice_gpu<T> operator+(matrice_gpu<T>& inp);
+    matrice_gpu<T> operator+(const matrice_gpu<T>& inp);
+    matrice_gpu<T> operator+(T inp);
 
-    matrice<T> operator*(matrice<T>& inp);
-    matrice<T> operator*(const matrice<T>& inp);
-    matrice<T> operator*(T inp);
+    matrice_gpu<T> operator*(matrice_gpu<T>& inp);
+    matrice_gpu<T> operator*(const matrice_gpu<T>& inp);
+    matrice_gpu<T> operator*(T inp);
 
-    matrice<T> operator/(T inp);
-    inline void dot(matrice<T>& a, matrice<T>& b, matrice<T>& dest);
+    matrice_gpu<T> operator/(T inp);
+    inline void dot(matrice_gpu<T>& a, matrice_gpu<T>& b, matrice_gpu<T>& dest);
 
-    matrice<T> Dot(const matrice<T>& inp);
-    matrice<T> Dot(matrice<T>& inp);
-
+    matrice_gpu<T> Dot(const matrice_gpu<T>& inp);
+    matrice_gpu<T> Dot(matrice_gpu<T>& inp);
+    
 };
 
 template <typename T>
-void general_Scalar_operation(matrice<T>& a, T b, matrice<T>& dest, Operations ops);
+void general_Scalar_operation(matrice_gpu<T>& a, T b, matrice_gpu<T>& dest, Operations ops);
 
 template <typename T>
-void general_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops);
+void general_operation(matrice_gpu<T>& a, matrice_gpu<T>& b, matrice_gpu<T>& dest, Operations ops);
 
-template <typename T>
-void general_vector_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops, int axis);
 
 #include "../src/matrice_gpu.cpp"
 #endif

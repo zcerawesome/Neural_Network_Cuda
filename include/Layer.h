@@ -4,10 +4,10 @@
 
 struct Layer
 {
-    matrice<float> weight;
-    matrice<float> bias;
-    matrice<float> (*activation_function)(matrice<float>& inp);
-    matrice<float> (*activation_function_derive)(matrice<float>& inp);
+    matrice_gpu<float> weight;
+    matrice_gpu<float> bias;
+    matrice_gpu<float> (*activation_function)(matrice_gpu<float>& inp);
+    matrice_gpu<float> (*activation_function_derive)(matrice_gpu<float>& inp);
     int outputs;
 };
 

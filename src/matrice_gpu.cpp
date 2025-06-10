@@ -1,13 +1,13 @@
 #include "matrice_gpu.h"
 
 template <typename T>
-std::vector<int> matrice<T>::shape()
+std::vector<int> matrice_gpu<T>::shape()
 {
     return {row, col};
 }
 
 template <typename T>
-void matrice<T>::resize(int row, int col)
+void matrice_gpu<T>::resize(int row, int col)
 {
     this->row = row;
     this->col = col;
@@ -15,7 +15,7 @@ void matrice<T>::resize(int row, int col)
 }
 
 template <typename T>
-void matrice<T>::toString()
+void matrice_gpu<T>::toString()
 {
     for(int i = 0; i < row; i++)
     {
@@ -26,28 +26,28 @@ void matrice<T>::toString()
 }
 
 template <typename T>
-int matrice<T>::numCols()
+int matrice_gpu<T>::numCols()
 {
     return col;
 }
 
 template <typename T>
-int matrice<T>::numRows()
+int matrice_gpu<T>::numRows()
 {
     return row;
 }
 
 template <typename T>
-T& matrice<T>::get(int x, int y)
+T& matrice_gpu<T>::get(int x, int y)
 {
     return matrix[x * col + y];
 }
 
 template <typename T>
-matrice<T>::matrice(){}
+matrice_gpu<T>::matrice_gpu(){}
 
 template <typename T>
-matrice<T>::matrice(int row, int col)
+matrice_gpu<T>::matrice_gpu(int row, int col)
 {
     this->row = row;
     this->col = col;
@@ -55,7 +55,7 @@ matrice<T>::matrice(int row, int col)
 }
 
 template <typename T>
-matrice<T>::matrice(const std::vector<T>& inp)
+matrice_gpu<T>::matrice_gpu(const std::vector<T>& inp)
 {
     matrix = inp;
     row = 1;
@@ -63,7 +63,7 @@ matrice<T>::matrice(const std::vector<T>& inp)
 }
 
 template <typename T>
-matrice<T>::matrice(std::vector<T>& inp)
+matrice_gpu<T>::matrice_gpu(std::vector<T>& inp)
 {
     matrix = inp;
     row = 1;
@@ -71,7 +71,7 @@ matrice<T>::matrice(std::vector<T>& inp)
 }
 
 template <typename T>
-matrice<T>::matrice(const std::vector<std::vector<T>>& inp)
+matrice_gpu<T>::matrice_gpu(const std::vector<std::vector<T>>& inp)
 {
     row = inp.size();
     col = inp[0].size();
@@ -82,7 +82,7 @@ matrice<T>::matrice(const std::vector<std::vector<T>>& inp)
 }
 
 template <typename T>
-matrice<T>::matrice(std::vector<std::vector<T>>& inp)
+matrice_gpu<T>::matrice_gpu(std::vector<std::vector<T>>& inp)
 {
     row = inp.size();
     col = inp[0].size();
@@ -93,9 +93,9 @@ matrice<T>::matrice(std::vector<std::vector<T>>& inp)
 }
 
 template<typename T>
-matrice<T> matrice<T>::transpose()
+matrice_gpu<T> matrice_gpu<T>::transpose()
 {
-    matrice<T> temp(col, row);
+    matrice_gpu<T> temp(col, row);
     for(int j = 0; j < row; j++)
         for(int i = 0; i < col; i++)
             temp.get(i, j) = get(j, i);
@@ -103,31 +103,31 @@ matrice<T> matrice<T>::transpose()
 }
 
 template<typename T>
-matrice<T> matrice<T>::operator=(const std::vector<std::vector<T>>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator=(const std::vector<std::vector<T>>& inp)
 {
-    return matrice<T>(inp);
+    return matrice_gpu<T>(inp);
 }
 
 template<typename T>
-matrice<T> matrice<T>::operator=(std::vector<std::vector<T>>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator=(std::vector<std::vector<T>>& inp)
 {
-    return matrice<T>(inp);
+    return matrice_gpu<T>(inp);
 }
 
 template<typename T>
-matrice<T> matrice<T>::operator=(const std::vector<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator=(const std::vector<T>& inp)
 {
-    return matrice<T>(inp);
+    return matrice_gpu<T>(inp);
 }
 
 template<typename T>
-matrice<T> matrice<T>::operator=(std::vector<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator=(std::vector<T>& inp)
 {
-    return matrice<T>(inp);
+    return matrice_gpu<T>(inp);
 }
 
 template <typename T>
-void matrice<T>::operator=(matrice<T>& inp)
+void matrice_gpu<T>::operator=(matrice_gpu<T>& inp)
 {
     matrix = inp.matrix;
     row = inp.row;
@@ -135,7 +135,7 @@ void matrice<T>::operator=(matrice<T>& inp)
 }
 
 template <typename T>
-void matrice<T>::operator=(const matrice<T>& inp)
+void matrice_gpu<T>::operator=(const matrice_gpu<T>& inp)
 {
     matrix = inp.matrix;
     row = inp.row;
@@ -143,26 +143,26 @@ void matrice<T>::operator=(const matrice<T>& inp)
 }
 
 template <typename T>
-void matrice<T>::update(int row, int col)
+void matrice_gpu<T>::update(int row, int col)
 {
     this->row = row;
     this->col = col;
 }
 
 template <typename T>
-T& matrice<T>::operator[](int value)
+T& matrice_gpu<T>::operator[](int value)
 {
     return matrix[value];
 }
 
 template <typename T>
-T* matrice<T>::getData()
+T* matrice_gpu<T>::getData()
 {
     return matrix.data();
 }
 
 template <typename T>
-T matrice<T>::sum()
+T matrice_gpu<T>::sum()
 {
     T value = 0;
     for(int i = 0; i < row * col; i++)
@@ -171,7 +171,7 @@ T matrice<T>::sum()
 }
 
 template <typename T>
-T matrice<T>::max()
+T matrice_gpu<T>::max()
 {
     T maximum = matrix[0];
     for(T& val: matrix)
@@ -180,9 +180,9 @@ T matrice<T>::max()
 }
 
 template <typename T>
-matrice<T> matrice<T>::getRows(int start, int end)
+matrice_gpu<T> matrice_gpu<T>::getRows(int start, int end)
 {
-    matrice<T> temp(end - start, col);
+    matrice_gpu<T> temp(end - start, col);
     for(int i = start; i < end; i++)
         for(int j = 0; j < col; j++)
             temp.get(i-start,j) = get(i, j);
@@ -190,49 +190,41 @@ matrice<T> matrice<T>::getRows(int start, int end)
 }
 
 template <typename T>
-matrice<T> matrice<T>::getCols(int start, int end)
+matrice_gpu<T> matrice_gpu<T>::getCols(int start, int end)
 {
-    matrice<T> temp = transpose();
+    matrice_gpu<T> temp = transpose();
     temp = temp.getRows(start, end);
     temp = temp.transpose();
     return temp;
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator-(matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator-(matrice_gpu<T>& inp)
 {
-    matrice<T> temp(inp.row, inp.col);
-    if(inp.row != row)
-        general_vector_operation(*this, inp, temp, Subtract, 0);
-    else if(inp.col != col)
-        general_vector_operation(*this, inp, temp, Subtract, 1);
-    if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), inp.row * inp.col, Subtract);
-    else
+    matrice_gpu<T> temp(inp.row, inp.col);
+    if(inp.row != row || inp.col != col || matrix.size() < 1000)
         general_operation(*this, inp, temp, Subtract);
-    return temp;
-}
-
-template <typename T>
-matrice<T> matrice<T>::operator-(const matrice<T>& inp)
-{
-    matrice<T> temp(inp.row, inp.col);
-    matrice<T> inp2 = inp;
-    if(inp.row != row)
-        general_vector_operation(*this, inp2, temp, Subtract, 0);
-    else if(inp.col != col)
-        general_vector_operation(*this, inp2, temp, Subtract, 1);
-    if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), inp.row * inp.col, Subtract);
     else
-        general_operation(*this, inp2, temp, Subtract);
+        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), Subtract, {row, col}, {inp.row, inp.col});
     return temp;
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator-(T inp)
+matrice_gpu<T> matrice_gpu<T>::operator-(const matrice_gpu<T>& inp)
 {
-    matrice<T> temp(row, col);
+    matrice_gpu<T> temp(inp.row, inp.col);
+    matrice_gpu<T> inp2 = inp;
+    if(inp.row != row || inp.col != col || matrix.size() < 1000)
+        general_operation(*this, inp2, temp, Subtract);
+    else
+        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), Subtract, {row, col}, {inp.row, inp.col});
+    return temp;
+}
+
+template <typename T>
+matrice_gpu<T> matrice_gpu<T>::operator-(T inp)
+{
+    matrice_gpu<T> temp(row, col);
     if(matrix.size() > 1000)
         General_scalar_helper(matrix.data(), inp, temp.getData(), row * col, Subtract);
     else
@@ -241,40 +233,32 @@ matrice<T> matrice<T>::operator-(T inp)
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator+(matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator+(matrice_gpu<T>& inp)
 {
-    matrice<T> temp(row, col);
-    if(inp.row != row)
-        general_vector_operation(*this, inp, temp, Add, 0);
-    else if(inp.col != col)
-        general_vector_operation(*this, inp, temp, Add, 1);
-    if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), inp.row * inp.col, Add);
-    else
+    matrice_gpu<T> temp(row, col);
+    if(row != inp.row || col != inp.col || matrix.size() < 1000)
         general_operation(*this, inp, temp, Add);
-    return temp;
-}
-
-template <typename T>
-matrice<T> matrice<T>::operator+(const matrice<T>& inp)
-{
-    matrice<T> temp(row, col);
-    matrice<T> inp2 = inp;
-    if(inp.row != row)
-        general_vector_operation(*this, inp2, temp, Add, 0);
-    else if(inp.col != col)
-        general_vector_operation(*this, inp2, temp, Add, 1);
-    if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), inp.row * inp.col, Add);
     else
-        general_operation(*this, inp2, temp, Add);
+        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), Add, {row, col}, {inp.row, inp.col});
     return temp;
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator+(T inp)
+matrice_gpu<T> matrice_gpu<T>::operator+(const matrice_gpu<T>& inp)
 {
-    matrice<T> temp(row, col);
+    matrice_gpu<T> temp(row, col);
+    matrice_gpu<T> inp2 = inp;
+    if(inp.row != row || inp.col != col || matrix.size() < 1000)
+        general_operation(*this, inp2, temp, Add);
+    else 
+        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), Add, {row, col}, {inp.row, inp.col});
+    return temp;
+}
+
+template <typename T>
+matrice_gpu<T> matrice_gpu<T>::operator+(T inp)
+{
+    matrice_gpu<T> temp(row, col);
     if(matrix.size() > 1000)
         General_scalar_helper(matrix.data(), inp, temp.getData(), row * col, Add);
     else
@@ -283,13 +267,13 @@ matrice<T> matrice<T>::operator+(T inp)
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator*(matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator*(matrice_gpu<T>& inp)
 {
     if(row != inp.row || col != inp.col)
         std::cerr << "Error different dimensions in multiplication" << std::endl;
-    matrice<T> temp(inp.row, inp.col);
+    matrice_gpu<T> temp(inp.row, inp.col);
     if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), inp.row * inp.col, Multiply);
+        General_operation_helper<T>(matrix.data(), inp.getData(), temp.getData(), Multiply, {row, col}, {inp.row, inp.col});
     else
         general_operation(*this, inp, temp, Multiply);
 
@@ -297,24 +281,24 @@ matrice<T> matrice<T>::operator*(matrice<T>& inp)
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator*(const matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::operator*(const matrice_gpu<T>& inp)
 {
     if(row != inp.row || col != inp.col)
         std::cerr << "Error different dimensions in multiplication" << std::endl;
-    matrice<T> temp(inp.row, inp.col);
-    matrice<T> inp2 = inp;
+    matrice_gpu<T> temp(inp.row, inp.col);
+    matrice_gpu<T> inp2 = inp;
     if(matrix.size() > 1000)
-        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), inp.row * inp.col, Multiply);
+        General_operation_helper<T>(matrix.data(), inp2.getData(), temp.getData(), Multiply, {row, col}, {inp.row, inp.col});
     else
         general_operation(*this, inp2, temp, Multiply);
     return temp;
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator*(T inp)
+matrice_gpu<T> matrice_gpu<T>::operator*(T inp)
 {
 
-    matrice<T> temp(row, col);
+    matrice_gpu<T> temp(row, col);
     if(matrix.size() > 1000)
         General_scalar_helper(matrix.data(), inp, temp.getData(), row * col, Multiply);
     else
@@ -323,9 +307,9 @@ matrice<T> matrice<T>::operator*(T inp)
 }
 
 template <typename T>
-matrice<T> matrice<T>::operator/(T inp)
+matrice_gpu<T> matrice_gpu<T>::operator/(T inp)
 {
-    matrice<T> temp(row, col);
+    matrice_gpu<T> temp(row, col);
     if(matrix.size() > 1000)
         General_scalar_helper(matrix.data(), inp, temp.getData(), row * col, Division);
     else
@@ -334,22 +318,22 @@ matrice<T> matrice<T>::operator/(T inp)
 }
 
 template <typename T>
-inline void matrice<T>::dot(matrice<T>& a, matrice<T>& b, matrice<T>& dest)
+inline void matrice_gpu<T>::dot(matrice_gpu<T>& a, matrice_gpu<T>& b, matrice_gpu<T>& dest)
 {
     for(int i = 0; i < a.row; i++)
     {
         for(int j = 0; j < b.col; j++)
         {
-            T& value = dest[i * dest.col + j];
+            T& value = dest.get(i, j);
             value = 0;
             for(int k = 0; k < a.col; k++)
-                value += a[i * a.col + k] * b[k * b.col + j];
+                value += a.get(i, k) * b.get(k, j);
         }
     }
 }
 
 template <typename T>
-matrice<T> matrice<T>::Dot(const matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::Dot(const matrice_gpu<T>& inp)
 {
     if(col != inp.row)
     {
@@ -358,8 +342,8 @@ matrice<T> matrice<T>::Dot(const matrice<T>& inp)
         exit(0);
         return {};
     }
-    matrice<T> temp(row, inp.col);
-    matrice<T> inp2 = inp;
+    matrice_gpu<T> temp(row, inp.col);
+    matrice_gpu<T> inp2 = inp;
     if(matrix.size() > 1000)
         dot_product(getData(), inp2.getData(), temp.getData(), row, inp.row, inp.col);
     else
@@ -368,7 +352,7 @@ matrice<T> matrice<T>::Dot(const matrice<T>& inp)
 }
 
 template <typename T>
-matrice<T> matrice<T>::Dot(matrice<T>& inp)
+matrice_gpu<T> matrice_gpu<T>::Dot(matrice_gpu<T>& inp)
 {
     if(col != inp.row)
     {
@@ -377,16 +361,17 @@ matrice<T> matrice<T>::Dot(matrice<T>& inp)
         exit(0);
         return {};
     }
-    matrice<T> temp(row, inp.col);
+    matrice_gpu<T> temp(row, inp.col);
     if(matrix.size() > 1000)
         dot_product(getData(), inp.getData(), temp.getData(), row, inp.row, inp.col);
     else
         dot(*this, inp, temp);
+        // std::cout << "CPU dot" << std::endl;
     return temp;
 }
 
 template <typename T>
-void general_Scalar_operation(matrice<T>& a, T b, matrice<T>& dest, Operations ops)
+void general_Scalar_operation(matrice_gpu<T>& a, T b, matrice_gpu<T>& dest, Operations ops)
 {
     for(int i = 0; i < a.numRows(); i++)
     {
@@ -412,41 +397,17 @@ void general_Scalar_operation(matrice<T>& a, T b, matrice<T>& dest, Operations o
 }
 
 template <typename T>
-void general_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops)
+void general_operation(matrice_gpu<T>& a, matrice_gpu<T>& b, matrice_gpu<T>& dest, Operations ops)
 {
+    bool vector_operation[] = {a.numRows() != b.numRows(), a.numCols() != b.numCols()};
     for(int i = 0; i < a.numRows(); i++)
     {
         for(int j = 0; j < a.numCols(); j++)
         {
             int index = i * dest.numCols() + j;
-            switch(ops)
-            {
-                case Add:
-                    dest[index] = a[index] + b[index];
-                    break;
-                case Subtract:
-                    dest[index] = a[index] - b[index];
-                    break;
-                case Multiply:
-                    dest[index] = a[index] * b[index];
-                    break;
-                case Division:
-                    dest[index] = a[index] / b[index];
-            }
-        }
-    }
-}
-
-
-template <typename T>
-void general_vector_operation(matrice<T>& a, matrice<T>& b, matrice<T>& dest, Operations ops, int axis)
-{
-    for(int i = 0; i < a.numRows(); i++)
-    {
-        for(int j = 0; j < a.numCols(); j++)
-        {
-            int index = i * dest.numCols() + j;
-            int b_index = (axis) ? index - j: j;
+            int b_index = index;
+            if(vector_operation[0] || vector_operation[1])
+                b_index = vector_operation[0] ? j:i;
             switch(ops)
             {
                 case Add:
