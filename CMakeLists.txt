@@ -10,13 +10,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 SET(SOURCES
-    src/matrice_gpu.cpp
+    src/matrice_gpu.cu
     src/Network.cpp
 )
 
 # Build the CUDA library
 add_library(matrice_helper STATIC
     src/matrice_helper.cu
+    src/Network_functions.cu
 )
 
 # Mark that this target contains CUDA code

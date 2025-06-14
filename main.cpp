@@ -1,5 +1,5 @@
 #include <iostream>
-#include "matrice_gpu.h"
+#include "matrice_gpu.cuh"
 #include <vector>
 #include <math.h>
 #include <fstream>
@@ -39,53 +39,6 @@ std::vector<std::vector<float>> loadCSV(std::string fileName, bool header=true, 
     return data;
 }
 
-float randomFloat()
-{
-    return (float)rand() / RAND_MAX;
-}
-
-void randomize_matrix(matrice_gpu<float>& inp)
-{
-    for(auto& rows: inp.matrix)
-        rows = randomFloat() - 0.5;
-}
-
-matrice_gpu<float> ReLU(matrice_gpu<float>& inp)
-{
-    matrice_gpu<float> temp(inp.numRows(), inp.numCols());
-    for(int i = 0; i < temp.matrix.size(); i++)
-        temp[i] = inp[i] > 0? inp[i]: 0;
-    return temp;
-}
-
-matrice_gpu<float> ReLU_derive(matrice_gpu<float>& inp)
-{
-    matrice_gpu<float> temp(inp.numRows(), inp.numCols());
-    for(int i = 0; i < temp.matrix.size(); i++)
-        temp[i] = inp[i] > 0;
-    return temp;
-}
-
-matrice_gpu<float> softmax(matrice_gpu<float>& inp)
-{
-    matrice_gpu<float> temp(inp.numRows(), inp.numCols());
-    for(int j = 0; j < temp.numCols(); j++)
-    {    
-        float sum = 0;
-        for(int i = 0; i < temp.numRows(); i++)
-        {
-            temp.get(i,j) = exp(inp.get(i, j));
-            sum += temp.get(i, j);
-            
-        }
-        for(int i = 0; i < temp.numRows(); i++)
-        {
-            temp.get(i,j) /= sum;
-        }
-    }
-    return temp;
-}
-
 int largest_index(matrice_gpu<float>& input, int row = 0)
 {
     int index = 0;
@@ -96,26 +49,6 @@ int largest_index(matrice_gpu<float>& input, int row = 0)
 
 int main()
 {
-    /*
-    int vec[1000];
-    for(int i = 0 ; i < sizeof(vec) / sizeof(int); i++)
-        vec[i] = i;
-    clock_t time1 = clock();
-    int sum = 0;
-    for(int i = 0 ; i < sizeof(vec) / sizeof(int); i++)
-        sum += vec[i];
-    clock_t time2 = clock();
-    std::cout << (time2 - time1) << std::endl;
-    std::cout << "CPU Sum: " << sum << std::endl;
-    time1 = clock();
-    sum = 0;
-    sum_cuda(vec, &sum, sizeof(vec) / sizeof(int));
-    time2 = clock();
-    std::cout << (time2 - time1) << std::endl;
-    std::cout << "GPU Sum: " << sum << std::endl;
-    return 0;*/
-    // srand(45);
-    srand(time(0) + 45);
     Network network;
     network.addLayer(784, 0, 0);
     network.addLayer(10, ReLU, ReLU_derive);
@@ -128,9 +61,11 @@ int main()
     std::string fileName = "../data/train.csv";
     std::vector<std::vector<float>> df = loadCSV(fileName, true, -1);
     matrice_gpu<float> data(df);
+
     data = data.transpose();
     int rows = data.numRows();
     int cols = data.numCols();
+    int j = 0;
 
     matrice_gpu<float> Train = data.getCols(1000, cols);
     matrice_gpu<float> X_train = Train.getRows(1,rows);
@@ -153,7 +88,7 @@ int main()
         network.update_params(dds, .1);
         for(int j = 0; j < results[3].numCols(); j++)
         {
-            if(largest_index(results[3], j) == Y_train.get(0, j))
+            if(results[3].largest_index(j) == Y_train.get(0, j))
                 total_correct++;
         }
         total += results[3].numCols();
@@ -162,14 +97,16 @@ int main()
             std::cout << "Iteration " << (i+1) << std::endl;
             std::cout << "Accuracy " << ((float)total_correct / total) << std::endl;
         }
+        std::cout << i << std::endl;
     }
     clock_t timer_end = clock();
     std::cout << "Simulation Time: " << (timer_end - timer_start) << std::endl;
+    exit(0);
     int correct = 0;
     vec(matrice_gpu<float>) results = network.forward(X_test);
     for(int i = 0; i < Y_test.numCols(); i++)
     {
-        if(largest_index(results[3], i) == Y_test.get(0, i))
+        if(results[3].largest_index(i) == Y_test.get(0, i))
             correct++;
         // std::cout << Y_test[i] << " " << largest_index(results[3], i) << std::endl;
     }

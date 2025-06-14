@@ -1,6 +1,6 @@
 #ifndef LAYER_H
 #define LAYER_H
-#include "matrice_gpu.h"
+#include "matrice_gpu.cuh"
 
 struct Layer
 {

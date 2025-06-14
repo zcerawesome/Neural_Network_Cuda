@@ -82,28 +82,18 @@ __global__ void General_scalar_operation(const T* a, T scalar, T* dest, int n, O
     }
 }
 
-
-
 template <typename T>
 void General_scalar_helper(const T* a, T scalar, T* dest, int n, Operations op)
 {
     int threadsPerBlock = 256;
     int blocks = (n + threadsPerBlock - 1) / threadsPerBlock;
-    T* cudaA, *cudaDest;
 
-    cudaMalloc(&cudaA, n * sizeof(T));
-    cudaMalloc(&cudaDest, n * sizeof(T));
-    cudaMemcpy(cudaA, a, n * sizeof(T), cudaMemcpyHostToDevice);
-
-    General_scalar_operation<T><<<blocks, threadsPerBlock>>>(cudaA, scalar, cudaDest, n, op);
+    General_scalar_operation<<<blocks, threadsPerBlock>>>(a, scalar, dest, n, op);
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess)
-        std::cerr << "Cuda Scalar Error: " << cudaGetErrorString(error) << std::endl;
+        std::cerr << "Cuda Scalar Error: " << n << " "<< cudaGetErrorString(error) << std::endl;
 
-    cudaMemcpy(dest, cudaDest, n * sizeof(T), cudaMemcpyDeviceToHost);
-    cudaFree(cudaA);
-    cudaFree(cudaDest);
 }
 
 template <typename T>
@@ -116,32 +106,22 @@ void General_operation_helper(const T* a, const T* b, T* dest, Operations op, Di
     int blockY = (a_dim.col + threadY - 1) / threadY;
 
 
-    T* cudaA;
-    T* cudaB;
-    T* cudaDest;
-
-    cudaMalloc(&cudaA, a_dim.row * a_dim.col * sizeof(T));
-    cudaMalloc(&cudaB, b_dim.row * b_dim.col * sizeof(T));
-    cudaMalloc(&cudaDest, a_dim.row * a_dim.col * sizeof(T));
-
-    cudaMemcpy(cudaA, a, a_dim.row * a_dim.col * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemcpy(cudaB, b, b_dim.row * b_dim.col * sizeof(T), cudaMemcpyHostToDevice);
-
     dim3 threads(threadX, threadY);
     dim3 Blocks(blockX, blockY);
-    General_operation<T><<<Blocks, threads>>>(cudaA, cudaB, cudaDest, a_dim, b_dim, op);
+    General_operation<T><<<Blocks, threads>>>(a, b, dest, a_dim, b_dim, op);
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess)
+    {
         std::cerr << "Cuda General Error: " << cudaGetErrorString(error) << std::endl;
+        std::cerr << a_dim[0] << " " << a_dim[1] << "  " << b_dim[0] << " " << b_dim[1] << std::endl;
+    }
 
-    cudaMemcpy(dest, cudaDest, a_dim.row * a_dim.col * sizeof(T), cudaMemcpyDeviceToHost);
-    free_data(cudaA, cudaB, cudaDest);
 }
 
 
 template <typename T>
-void dot_product(const T* a, const T* b, T* dest, int m, int k, int n)
+inline void dot_product(const T* a, const T* b, T* dest, int m, int k, int n)
 {
     int threadX = 16;
     int blockX = (m + threadX - 1) / threadX;
@@ -149,26 +129,47 @@ void dot_product(const T* a, const T* b, T* dest, int m, int k, int n)
     int threadY = 16;
     int blockY = (n + threadY - 1) / threadY;
  
-    T* cudaA, *cudaB, *cudaDest;
     
-    cudaMalloc(&cudaA, m * k * sizeof(T));
-    cudaMalloc(&cudaB, n * k * sizeof(T));
-    cudaMalloc(&cudaDest, m * n * sizeof(T));
-
-    cudaMemcpy(cudaA, a, m * k * sizeof(T), cudaMemcpyHostToDevice);
-    cudaMemcpy(cudaB, b, n * k * sizeof(T), cudaMemcpyHostToDevice);
-        
+            
     dim3 threads(threadX, threadY);
     dim3 Blocks(blockX, blockY);
-    dot<<<Blocks, threads>>>(cudaA, cudaB, cudaDest, m, k, n);
+    dot<<<Blocks, threads>>>(a, b, dest, m, k, n);
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess)
+    {
         std::cerr << "Cuda Dot Error: " << cudaGetErrorString(error) << std::endl;
+        std::cerr << m << " " << k << "  " << k << " " << n << std::endl;
+    }
 
-    cudaMemcpy(dest, cudaDest, m * n * sizeof(T), cudaMemcpyDeviceToHost);
-    free_data(cudaA, cudaB, cudaDest);
+}
 
+template <typename T>
+__global__ void transpose_Cuda(const T* a, T* dest, Dim2 a_dim)
+{
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    int idy = threadIdx.y + blockDim.y * blockIdx.y;
+
+    if(idx < a_dim.row && idy < a_dim.col)
+        dest[idy * a_dim.row + idx] = a[idx * a_dim.col + idy];
+}
+
+template <typename T>
+void transpose_GPU(const T* a, T* dest, Dim2 a_dim)
+{
+    int threadX = 16;
+    int blockX = (a_dim.row + threadX - 1) / threadX;
+
+    int threadY = 16;
+    int blockY = (a_dim.col + threadY - 1) / threadY;
+    dim3 threads(threadX, threadY);
+    dim3 Blocks(blockX, blockY);
+
+    transpose_Cuda<<<Blocks, threads>>>(a, dest, a_dim);
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess)
+        std::cerr << "Cuda Transpose Error: " << cudaGetErrorString(error) << std::endl;
 }
 
 template void General_operation_helper(const int* , const int*, int*, Operations, Dim2, Dim2);
@@ -179,3 +180,6 @@ template void General_scalar_helper(const float* a, float scalar, float* dest, i
 
 template void dot_product(const int* , const int* , int*, int, int, int);
 template void dot_product(const float* , const float* , float*, int, int, int);
+
+template void transpose_GPU(const float* , float* , Dim2);
+template void transpose_GPU(const int* , int* , Dim2);

@@ -68,6 +68,10 @@
         "queue": "cpp",
         "codecvt": "cpp",
         "fstream": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "shared_mutex": "cpp",
+        "cfenv": "cpp"
     }
 }

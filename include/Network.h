@@ -5,7 +5,7 @@
 #include <vector>
 #include "Layer.h"
 #include <math.h>
-
+#include "Network_functions.cuh"
 
 class Network
 {
@@ -16,7 +16,6 @@ public:
     void addLayer(int output, matrice_gpu<float> (*activation_function)(matrice_gpu<float>& inp), matrice_gpu<float> (*activation_function_derive)(matrice_gpu<float>& inp));
     void setRandomization(void (*Weight_randomization)(matrice_gpu<float>&));
     void applyRandomzation(int layer);
-    matrice_gpu<float> one_hot_encode(matrice_gpu<float>& y);
     vec(matrice_gpu<float>) forward(matrice_gpu<float>& X);
     vec(matrice_gpu<float>) backward_prop(vec(matrice_gpu<float>)& forward, matrice_gpu<float>& X, matrice_gpu<float>& Y);
     void update_params(vec(matrice_gpu<float>)& back_prop, float alpha);
