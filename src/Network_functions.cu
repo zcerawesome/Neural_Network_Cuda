@@ -7,21 +7,14 @@ Dim2 blocks_threads(int size, int threads)
     return {blocks, thread_amount};
 }
 
-__global__ void setupRand(curandState* state, unsigned long seed, int size)
-{
-    int id = threadIdx.x + blockDim.x + blockIdx.x;
-    if(id < size)
-        curand_init(seed, id, 0, &state[id]);
-}
-
-__global__ void generate_kernel(curandState* state, float* result, int size)
+__global__ void generate_kernel(float* result, int size, unsigned long int seed)
 {
     int id = threadIdx.x + blockDim.x * blockIdx.x;
     if(id >= size)
         return;
-    curandState localState = state[id];
-    result[id] = curand_uniform(&localState);
-    state[id] = localState;
+    curandState state;
+    curand_init(seed, id, 0, &state);
+    result[id] = curand_uniform(&state) - 0.5;
 }
 
 __global__ void relu(const float* a, float* dest, int size)
@@ -74,8 +67,7 @@ void randomize_matrix(matrice_gpu<float>& inp)
 
     curandState *d_state;
     cudaMalloc(&d_state, inp.size() * sizeof(float));
-    setupRand<<<blocks, threads>>>(d_state, time(0), inp.size());
-    generate_kernel<<<blocks, threads>>>(d_state, inp.matrix, inp.size());
+    generate_kernel<<<blocks, threads>>>(inp.matrix, inp.size(), time(0));
     cudaDeviceSynchronize();
 }
 

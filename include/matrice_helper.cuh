@@ -30,3 +30,9 @@ void dot_product(const T* a, const T* b, T* dest, int firstRow, int secondRow, i
 
 template <typename T>
 void transpose_GPU(const T* a, T* dest, Dim2 a_dim);
+
+template <typename T>
+void largest_index(const T* a, T* dest, Dim2 a_dim);
+
+template <typename T>
+int num_equal(const T* a, const T* dest, int size);

@@ -15,6 +15,33 @@ void free_data(void* a, void* b, void* c)
 }
 
 template <typename T>
+__global__ void num_equal_cuda(const T* a, const T* Y, int* numEqual, int size)
+{
+    __shared__ int blockcount;
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    if(idx >= size)
+        return;
+    if(threadIdx.x == 0) blockcount = 0;
+    __syncthreads();
+
+    atomicAdd(&blockcount, (a[idx] == Y[idx]));
+    __syncthreads();
+    if(threadIdx.x == 0) atomicAdd(numEqual, blockcount);
+}
+
+template <typename T>
+__global__ void largest_index_cuda(const T* a, T* Y, int numColumn, int numRow)
+{
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    if(idx >= numColumn * numRow)
+        return;
+    int index = 0;
+    for(int i = 0; i < numRow; i++)
+        index += (a[i * numColumn + idx] > a[index * numColumn + idx]) * (i - index);
+    Y[idx] = (T)index;
+}
+
+template <typename T>
 __global__ void dot(const T* a, const T* b, T* dest, int m, int k, int n)
 {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
@@ -172,6 +199,36 @@ void transpose_GPU(const T* a, T* dest, Dim2 a_dim)
         std::cerr << "Cuda Transpose Error: " << cudaGetErrorString(error) << std::endl;
 }
 
+template <typename T>
+void largest_index(const T* a, T* dest, Dim2 a_dim)
+{
+    int threads = 256;
+    int blocks = (a_dim.col + threads - 1) / threads;
+    largest_index_cuda<<<blocks, threads>>>(a, dest, a_dim.col, a_dim.row);
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess)
+        std::cerr << "Cuda largest index Error: " << cudaGetErrorString(error) << std::endl;
+}
+
+template <typename T>
+int num_equal(const T* a, const T* dest, int size)
+{
+    int threads = 256;
+    int blocks = (size + threads - 1) / threads;
+    int* cudaSum;
+    cudaMalloc(&cudaSum, sizeof(int));
+    num_equal_cuda<<<blocks, threads>>>(a, dest, cudaSum, size);
+    cudaDeviceSynchronize();
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess)
+        std::cerr << "Cuda num_equal Error: " << cudaGetErrorString(error) << std::endl;
+    int num_equal1;
+    cudaMemcpy(&num_equal1, cudaSum, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(cudaSum);
+    return num_equal1;   
+}
+
 template void General_operation_helper(const int* , const int*, int*, Operations, Dim2, Dim2);
 template void General_operation_helper(const float* , const float*, float*, Operations, Dim2, Dim2);
 
@@ -183,3 +240,9 @@ template void dot_product(const float* , const float* , float*, int, int, int);
 
 template void transpose_GPU(const float* , float* , Dim2);
 template void transpose_GPU(const int* , int* , Dim2);
+
+template void largest_index(const float* , float* , Dim2);
+template void largest_index(const int* , int* , Dim2);
+
+template int num_equal(const float* , const float* , int);
+template int num_equal(const int* , const int* , int);

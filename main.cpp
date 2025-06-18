@@ -39,11 +39,11 @@ std::vector<std::vector<float>> loadCSV(std::string fileName, bool header=true, 
     return data;
 }
 
-int largest_index(matrice_gpu<float>& input, int row = 0)
+int largest_index(std::vector<float>& input, int row, int numColumn, int numRow)
 {
     int index = 0;
-    for(int i = 0; i < input.numRows(); i++)
-        index = input.get(i, row) > input.get(index, row)? i: index;
+    for(int i = 0; i < numRow; i++)
+        index = input[i * numColumn + row] > input[index * numColumn + row]? i: index;
     return index;
 }
 
@@ -65,7 +65,6 @@ int main()
     data = data.transpose();
     int rows = data.numRows();
     int cols = data.numCols();
-    int j = 0;
 
     matrice_gpu<float> Train = data.getCols(1000, cols);
     matrice_gpu<float> X_train = Train.getRows(1,rows);
@@ -77,38 +76,26 @@ int main()
     X_test = X_test / 255.0;
     matrice_gpu<float> Y_test = test.getRows(0,1);
 
-    int total_correct = 0;
-    int total = 0;
+    std::vector<float> Y_train_cpu = Y_train.CPU_data();
     std::cout << "Starting Clock" << std::endl;
     clock_t timer_start = clock();
+    int total = X_train.numCols();
     for(int i = 0; i < 500; i++)
     {
         vec(matrice_gpu<float>) results = network.forward(X_train);
         vec(matrice_gpu<float>) dds = network.backward_prop(results, X_train, Y_train);
         network.update_params(dds, .1);
-        for(int j = 0; j < results[3].numCols(); j++)
-        {
-            if(results[3].largest_index(j) == Y_train.get(0, j))
-                total_correct++;
-        }
-        total += results[3].numCols();
+        
         if((i+1) % 10 == 0)
         {
+            int total_correct = num_correct(results[3], Y_train);
             std::cout << "Iteration " << (i+1) << std::endl;
-            std::cout << "Accuracy " << ((float)total_correct / total) << std::endl;
+            std::cout << "Accuracy " << ((float)(total_correct) / total) << std::endl;
         }
-        std::cout << i << std::endl;
     }
     clock_t timer_end = clock();
     std::cout << "Simulation Time: " << (timer_end - timer_start) << std::endl;
-    exit(0);
-    int correct = 0;
     vec(matrice_gpu<float>) results = network.forward(X_test);
-    for(int i = 0; i < Y_test.numCols(); i++)
-    {
-        if(results[3].largest_index(i) == Y_test.get(0, i))
-            correct++;
-        // std::cout << Y_test[i] << " " << largest_index(results[3], i) << std::endl;
-    }
+    int correct = num_correct(results[3], Y_test);
     std::cout << "Accuracy: " << (float)correct / Y_test.numCols() << std::endl;
 }

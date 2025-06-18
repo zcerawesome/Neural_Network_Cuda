@@ -25,22 +25,26 @@ void Network::applyRandomzation(int layer)
     Weight_randomization(picked_layer.bias);
 }
 
-// bool has_nan(matrice_gpu<float>& inp)
-// {
-//     for(auto& value: inp)
-//         if(isnan(value))
-//             return true;
-//     return false;
-// }
+bool has_nan(matrice_gpu<float>& inp)
+{
+    std::vector<float> cpu = inp.CPU_data();
+    for(auto& value: cpu)
+        if(isnan(value))
+            return true;
+    return false;
+}
 
-// bool has_nan(vec(matrice_gpu<float>)& inp)
-// {
-//     for(auto& matrix: inp)
-//         for(auto& value: matrix)
-//             if(isnan(value))
-//                 return true;
-//     return false;
-// }
+bool has_nan(vec(matrice_gpu<float>)& inp)
+{
+    for(auto& matrix: inp)
+    {
+        std::vector<float> cpu = matrix.CPU_data();
+        for(auto& value: cpu)
+            if(isnan(value))
+                return true;
+    }
+    return false;
+}
 
 vec(matrice_gpu<float>) Network::forward(matrice_gpu<float>& X)
 {
@@ -78,11 +82,8 @@ vec(matrice_gpu<float>) Network::backward_prop(vec(matrice_gpu<float>)& forward,
             results[i * 2] = not_results[i].Dot(X.transpose()) / col;
         else
             results[i * 2] = not_results[i].Dot(forward[i * 2 - 1].transpose()) / col;
-        results[i * 2 + 1].resize(1, 1);
         results[i * 2 + 1] = not_results[i].sum() / col;
     }
-    // for(auto& mat: results)
-    //     std::cout << mat.shape()[0] << " " << mat.shape()[1] << std::endl;
     return results;
 }
 
