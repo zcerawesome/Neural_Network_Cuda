@@ -10,58 +10,83 @@
 #define vec(X) std::vector<X>
 #define vec2D(X) std::vector<std::vector<X>>
 
-std::vector<std::vector<float>> loadCSV(std::string fileName, bool header=true, int maxRows=1000, int row_number=0)
+void generate_image()
 {
-    std::vector<std::vector<float>> data;
-    std::ifstream file(fileName);
-    if(!file.is_open())
-        std::cerr << "Error file path is wrong" << std::endl;
-    std::string line;
-    if(header)
-        getline(file, line);
-    int i = 0;
-    while(i < row_number && getline(file, line))
-        i++;
-    i = 0;
-    while(getline(file, line) && (i < maxRows || maxRows == -1))
+    std::string fileName = "../data/train.csv";
+    matrice_gpu<float> data;
+    data.load_data(fileName, true, -1);
+    data = data.transpose();
+    int rows = data.numRows();
+    int cols = data.numCols();
+
+    matrice_gpu<float> Train = data.getCols(1000, cols);
+    matrice_gpu<float> Y_train = Train.getRows(1,rows);
+    Y_train = Y_train / 255.0;
+    matrice_gpu<float> X_train = Train.getRows(0,1);
+
+    matrice_gpu<float> test = data.getCols(0, 1000);
+    matrice_gpu<float> Y_test = test.getRows(1, rows);
+    Y_test = Y_test / 255.0;
+    matrice_gpu<float> X_test = test.getRows(0,1);
+    Network<float> network;
+    network.addLayer(10, 0, 0);
+    // network.addLayer(10, ReLU, ReLU_derive);
+    network.addLayer(64, ReLU, ReLU_derive);
+    network.addLayer(128, ReLU, ReLU_derive);
+    network.addLayer(784, sigmoid, 0);
+    // network.setRandomization(randomize_matrix);
+    // network.applyRandomzation(1);
+    // network.applyRandomzation(2);
+    // network.applyRandomzation(3);
+    for(int i = 1; i < 3; i++)
     {
-        std::vector<float> row;
-        std::stringstream ss(line);
-        std::string value;
-
-        while(std::getline(ss, value, ','))
-        {
-            row.push_back(std::stod(value));
-        }
-        data.push_back(row);
-        i++;
+        Layer& layer = network.layers[i];
+        random_sample(layer.weight, 0, sqrt(2 / layer.weight.numCols()));
     }
-    return data;
-}
-
-int largest_index(std::vector<float>& input, int row, int numColumn, int numRow)
-{
-    int index = 0;
-    for(int i = 0; i < numRow; i++)
-        index = input[i * numColumn + row] > input[index * numColumn + row]? i: index;
-    return index;
+    Layer& last_layer = network.layers[3];
+    random_sample(last_layer.weight, 0, 2 / (last_layer.weight.numCols() + last_layer.weight.numRows()));
+    X_train = one_hot_encode(X_train, 9);
+    char train = 'y';
+    int total_iterations = 0;
+    while(train == 'y')
+    {
+        int i;
+        std::cout << "Enter iterations to train: ";
+        std::cin >> i;
+        network.train(i, 0.1, X_train, Y_train, Y_train);
+        std::vector<float> examples = {0,1,2,3,4,5,6,7,8,9};
+        matrice_gpu<float> guess(examples);
+        guess = one_hot_encode(guess, 9);
+        vec(matrice_gpu<float>) forward = network.forward(guess);
+        matrice_gpu<float> answer = forward.back().transpose();
+        std::ofstream output("../output/Guess2.csv");
+        // forward.back().update(1, 784);
+        output << answer.toString();
+        output.close();
+        total_iterations += i;
+        std::cout << "Total Iterations: " << total_iterations << std::endl;
+    }
+    // network.save_data("../output/MNIST_Digit_4_layer.txt");
+    // network.load_parameters("../output/MNIST_Digit_4_layer.txt",false);
+    
+    // network.test(X_test, Y_test);
 }
 
 int main()
 {
-    Network network;
-    network.addLayer(784, 0, 0);
-    network.addLayer(10, ReLU, ReLU_derive);
-    network.addLayer(10, softmax, 0);
-
-    network.setRandomization(randomize_matrix);
-    network.applyRandomzation(1);
-    network.applyRandomzation(2);
-
+    // matrice_gpu<float> guess;
+    // guess = 0;
+    // guess = sigmoid(guess);
+    // std::cout << guess.toString() << std::endl;
+    // exit(0);
+    generate_image();
+    // matrice_gpu<float> temp(10, 10);
+    // random_sample(temp, 0, 1);
+    // std::cout << temp.toString() << std::endl;
+    return 0;
     std::string fileName = "../data/train.csv";
-    std::vector<std::vector<float>> df = loadCSV(fileName, true, -1);
-    matrice_gpu<float> data(df);
-
+    matrice_gpu<float> data;
+    data.load_data(fileName, true, -1);
     data = data.transpose();
     int rows = data.numRows();
     int cols = data.numCols();
@@ -75,27 +100,39 @@ int main()
     matrice_gpu<float> X_test = test.getRows(1, rows);
     X_test = X_test / 255.0;
     matrice_gpu<float> Y_test = test.getRows(0,1);
+    Network<float> network;
+    network.addLayer(784, 0, 0);
+    network.addLayer(10, ReLU, ReLU_derive);
+    network.addLayer(10, softmax, 0);
 
-    std::vector<float> Y_train_cpu = Y_train.CPU_data();
-    std::cout << "Starting Clock" << std::endl;
-    clock_t timer_start = clock();
-    int total = X_train.numCols();
-    for(int i = 0; i < 500; i++)
+    network.setRandomization(randomize_matrix);
+    char stored_data = 'n';
+    // std::cout << "Want to use stored data? (Y/N) ";
+    // std::cin >> stored_data;
+    if(stored_data == 'Y' || stored_data == 'y')
+        network.load_parameters("../output/MNIST_Digit.txt", false);
+    else
     {
-        vec(matrice_gpu<float>) results = network.forward(X_train);
-        vec(matrice_gpu<float>) dds = network.backward_prop(results, X_train, Y_train);
-        network.update_params(dds, .1);
-        
-        if((i+1) % 10 == 0)
-        {
-            int total_correct = num_correct(results[3], Y_train);
-            std::cout << "Iteration " << (i+1) << std::endl;
-            std::cout << "Accuracy " << ((float)(total_correct) / total) << std::endl;
-        }
+        network.applyRandomzation(1);
+        network.applyRandomzation(2);
+        matrice_gpu<float> Y_encode;
+        Y_encode = one_hot_encode(Y_train, 9);
+        network.train(500, 0.1, X_train, Y_encode, Y_train);
     }
-    clock_t timer_end = clock();
-    std::cout << "Simulation Time: " << (timer_end - timer_start) << std::endl;
-    vec(matrice_gpu<float>) results = network.forward(X_test);
-    int correct = num_correct(results[3], Y_test);
-    std::cout << "Accuracy: " << (float)correct / Y_test.numCols() << std::endl;
+    auto Y_test_encode = one_hot_encode(Y_test, 9);
+    std::cout << Y_test_encode.getShape() << std::endl;
+    network.test(X_test, Y_test_encode);
+    
+    // matrice_gpu<float> input;
+    // input.load_data("../test.csv", false, -1);
+    // forward = network.forward(input);
+    // std::cout << "Guessed value: " << forward[3].largest_index(0) << " " << forward[3].get(2,0)<< std::endl;
+    // exit(0);
+    char save_data;
+    std::cout << "Do you want to save data ? (Y/N) ";
+    std::cin >> save_data;
+    if(save_data == 'Y' || save_data == 'y')
+    {
+        network.save_data("../output/MNIST_Digit.txt");
+    }
 }

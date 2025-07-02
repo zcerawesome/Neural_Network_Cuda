@@ -35,4 +35,4 @@ template <typename T>
 void largest_index(const T* a, T* dest, Dim2 a_dim);
 
 template <typename T>
-int num_equal(const T* a, const T* dest, int size);
+void general_clamp(const T* a, T* dest, int size, T lower, T higher);

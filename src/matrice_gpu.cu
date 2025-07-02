@@ -32,13 +32,18 @@ void matrice_gpu<T>::update(int row, int col)
 template <typename T>
 std::string matrice_gpu<T>::toString()
 {
+    if(size() == 0)
+        return "";
     std::vector<T> cpu = CPU_data();
     std::string data;
     for(int i = 0; i < row; i++)
     {
         for(int j = 0; j < col; j++)
-            data = data + std::to_string(cpu[i * col + j]) + " ";
-        data += "\n";
+        {
+            data += std::to_string(cpu[i * col + j]);
+            data += (j == col -1) ? ' ': ',';
+        }
+        data += '\n';
     }
     return data;
 }
@@ -155,6 +160,12 @@ matrice_gpu<T>::~matrice_gpu()
 template <typename T>
 matrice_gpu<T> matrice_gpu<T>::transpose()
 {
+    if(row == 1 || col == 1)
+    {
+        matrice_gpu<T> temp = *this;
+        temp.update(col, row);
+        return temp;
+    }
     matrice_gpu<T> temp(col, row);
     transpose_GPU(matrix, temp.matrix, {row, col});
     return temp;
@@ -228,6 +239,44 @@ void matrice_gpu<T>::operator=(const matrice_gpu<T>& inp)
 }
 
 template <typename T>
+void matrice_gpu<T>::load_data(std::string file_name, bool header, int maxRows, int row_number)
+{
+    std::vector<std::vector<T>> data;
+    std::ifstream file(file_name);
+    if(!file.is_open())
+    {
+        std::cerr << "Error file cannot be opened" << std::endl;
+        return;
+    }
+    std::string line;
+    if(header)
+        getline(file, line);
+    int i = 0;
+    while(i < row_number && getline(file, line))
+        i++;
+    i = 0;
+    while(getline(file, line) && (maxRows == -1 || i < maxRows))
+    {
+        std::vector<T> row;
+        const char* ptr = line.c_str();
+        char* end;
+
+        while(*ptr)
+        {
+            T val = std::strtof(ptr, &end);
+            row.push_back(val);
+            if(end == ptr)
+                ++ptr;
+            else
+                ptr = end + 1;
+        }
+        data.push_back(std::move(row));
+        i++;
+    }
+    *this = data;
+}
+
+template <typename T>
 T& matrice_gpu<T>::operator[](int row)
 {
     return matrix[row];
@@ -241,6 +290,32 @@ T matrice_gpu<T>::sum()
     for(auto value: cpu)
         val += value;
     return val;
+}
+
+template <typename T>
+matrice_gpu<T> matrice_gpu<T>::sum_axis(int axis)
+{
+    int rows = 1;
+    int cols = 1;
+
+    if(axis)
+        rows = row;
+    else
+        cols = col;
+    std::vector<T> temp_vec(rows * cols);
+    std::vector<T> cpu = CPU_data();
+    for(int i = 0; i < row; i++)
+    {
+        for(int j = 0; j < col; j++)
+        {
+            int index = (rows > cols) ? i: j;
+            temp_vec[index] += cpu[i * numCols() + j];
+        }
+    }
+    matrice_gpu<T> temp(temp_vec);
+    if(rows != 1)
+        temp = temp.transpose();
+    return temp;
 }
 
 template <typename T>
@@ -277,6 +352,14 @@ matrice_gpu<T> matrice_gpu<T>::getCols(int start, int end)
     matrice_gpu<T> temp = transpose();
     temp = temp.getRows(start, end);
     temp = temp.transpose();
+    return temp;
+}
+
+template <typename T>
+matrice_gpu<T> matrice_gpu<T>::clamp(T lower, T higher)
+{
+    matrice_gpu<T> temp(row, col);
+    general_clamp(matrix, temp.matrix, size(), lower, higher);
     return temp;
 }
 
@@ -387,6 +470,5 @@ int num_correct(matrice_gpu<T>& output, matrice_gpu<T>& answer)
     for(int i = 0; i < answer.numCols(); i++)
         if(guess[i] == answers[i])
             correct++;
-    // int correct = num_equal(answer.matrix, vals_correct.matrix, output.numCols()) ;
     return correct;
 }

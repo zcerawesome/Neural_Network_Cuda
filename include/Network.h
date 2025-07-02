@@ -7,18 +7,24 @@
 #include <math.h>
 #include "Network_functions.cuh"
 
+template <typename T>
 class Network
 {
 private:
-    void (*Weight_randomization)(matrice_gpu<float>&) = 0;
+    void (*Weight_randomization)(matrice_gpu<T>&) = 0;
 public:
     std::vector<Layer> layers;   
-    void addLayer(int output, matrice_gpu<float> (*activation_function)(matrice_gpu<float>& inp), matrice_gpu<float> (*activation_function_derive)(matrice_gpu<float>& inp));
-    void setRandomization(void (*Weight_randomization)(matrice_gpu<float>&));
+    void addLayer(int output, matrice_gpu<T> (*activation_function)(matrice_gpu<T>& inp), matrice_gpu<T> (*activation_function_derive)(matrice_gpu<T>& inp));
+    void load_parameters(std::string filename, bool header=true);
+    void setRandomization(void (*Weight_randomization)(matrice_gpu<T>&));
     void applyRandomzation(int layer);
-    vec(matrice_gpu<float>) forward(matrice_gpu<float>& X);
-    vec(matrice_gpu<float>) backward_prop(vec(matrice_gpu<float>)& forward, matrice_gpu<float>& X, matrice_gpu<float>& Y);
-    void update_params(vec(matrice_gpu<float>)& back_prop, float alpha);
+    vec(matrice_gpu<T>) forward(matrice_gpu<T>& X);
+    vec(matrice_gpu<T>) backward_prop(vec(matrice_gpu<T>)& forward, matrice_gpu<T>& X, matrice_gpu<T>& Y);
+    void update_params(vec(matrice_gpu<T>)& back_prop, float alpha);
+
+    void train(int epochs, float alpha, matrice_gpu<T>& X_train, matrice_gpu<T>& Y_train, matrice_gpu<float>& Y, bool print = true);
+    void test(matrice_gpu<T>& X_test, matrice_gpu<T>& Y_test);
+    void save_data(std::string file_name);
 };
 
 #include "../src/Network.cpp"

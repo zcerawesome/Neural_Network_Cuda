@@ -3,7 +3,8 @@
 #include <vector>
 #include <iostream>
 #include "matrice_helper.cuh"
-
+#include <fstream>
+#include <sstream>
 
 template <typename T>
 class matrice_gpu
@@ -43,13 +44,16 @@ public:
     void operator=(matrice_gpu<T>& inp);
     void operator=(const matrice_gpu<T>& inp);
 
+    void load_data(std::string file_name, bool header = true, int maxRows=1000, int row_number = 0);
     T& operator[](int row);
     T sum();
+    matrice_gpu<T> sum_axis(int axis);
     T max();
     int largest_index(int col);
 
     matrice_gpu<T> getRows(int start, int end);
     matrice_gpu<T> getCols(int start, int end);
+    matrice_gpu<T> clamp(T lower, T higher);
 
     matrice_gpu<T> operator-(matrice_gpu<T>& inp);
     matrice_gpu<T> operator-(const matrice_gpu<T>& inp);

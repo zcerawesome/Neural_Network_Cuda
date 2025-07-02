@@ -14,19 +14,21 @@ void free_data(void* a, void* b, void* c)
     cudaFree(c);
 }
 
+
 template <typename T>
-__global__ void num_equal_cuda(const T* a, const T* Y, int* numEqual, int size)
+__global__ void clamp_cuda(const T* a, T* dest, int size, T lower, T higher)
 {
-    __shared__ int blockcount;
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
     if(idx >= size)
         return;
-    if(threadIdx.x == 0) blockcount = 0;
-    __syncthreads();
-
-    atomicAdd(&blockcount, (a[idx] == Y[idx]));
-    __syncthreads();
-    if(threadIdx.x == 0) atomicAdd(numEqual, blockcount);
+    dest[idx] = a[idx];
+    if(dest[idx] < lower)
+    {
+        dest[idx] = lower;
+        return;
+    }
+    if(dest[idx] > higher)
+        dest[idx] = higher;
 }
 
 template <typename T>
@@ -212,21 +214,12 @@ void largest_index(const T* a, T* dest, Dim2 a_dim)
 }
 
 template <typename T>
-int num_equal(const T* a, const T* dest, int size)
+void general_clamp(const T* a, T* dest, int size, T lower, T higher)
 {
     int threads = 256;
     int blocks = (size + threads - 1) / threads;
-    int* cudaSum;
-    cudaMalloc(&cudaSum, sizeof(int));
-    num_equal_cuda<<<blocks, threads>>>(a, dest, cudaSum, size);
+    clamp_cuda<<<blocks, threads>>>(a, dest, size, lower, higher);
     cudaDeviceSynchronize();
-    cudaError_t error = cudaGetLastError();
-    if(error != cudaSuccess)
-        std::cerr << "Cuda num_equal Error: " << cudaGetErrorString(error) << std::endl;
-    int num_equal1;
-    cudaMemcpy(&num_equal1, cudaSum, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFree(cudaSum);
-    return num_equal1;   
 }
 
 template void General_operation_helper(const int* , const int*, int*, Operations, Dim2, Dim2);
@@ -244,5 +237,5 @@ template void transpose_GPU(const int* , int* , Dim2);
 template void largest_index(const float* , float* , Dim2);
 template void largest_index(const int* , int* , Dim2);
 
-template int num_equal(const float* , const float* , int);
-template int num_equal(const int* , const int* , int);
+template void general_clamp(const float* a, float* dest, int, float, float);
+template void general_clamp(const int* a, int* dest, int, int, int);

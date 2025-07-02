@@ -9,9 +9,11 @@
 
 
 void randomize_matrix(matrice_gpu<float>& inp);
+void random_sample(matrice_gpu<float>& inp, float mu, float sigma);
 matrice_gpu<float> ReLU(matrice_gpu<float>& inp);
 matrice_gpu<float> ReLU_derive(matrice_gpu<float>& inp);
 matrice_gpu<float> softmax(matrice_gpu<float>& inp);
-matrice_gpu<float> one_hot_encode(matrice_gpu<float>& y);
+matrice_gpu<float> sigmoid(matrice_gpu<float>& inp);
+matrice_gpu<float> one_hot_encode(matrice_gpu<float>& y, float max);
 
 #endif
